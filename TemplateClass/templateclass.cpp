@@ -1,126 +1,108 @@
 #include <iostream>
-#include <vector>
+#include <stdint.h>
 
 template <class T>
 class SafeArray {
-private:
+    private:
+        constexpr static uint32_t ARRAY_MAX_SIZE = 100;
 
-    constexpr static uint32_t MAX_SIZE = 10;
-    
-    T* arr;
-    uint32_t arrSize;
+        T* array;
+        uint32_t arraySize;
 
-public:
-    
-    // constructors
-    SafeArray();
-    SafeArray(T* arr, uint32_t&& arrSize); // overloading constructor
-    SafeArray(const SafeArray& safeArray); // copy constructor
-    SafeArray(SafeArray&& safeArray); // move constructor
+    public:
 
-    // destructors
-    ~SafeArray();
+        SafeArray();
+        SafeArray(T* arr, uint32_t&& arraySize);
+        SafeArray(const SafeArray& safeArray);
+        SafeArray(SafeArray&& safeArray);
 
-    // methods
-    void printArray() const;
-    T& operator[](const uint32_t index);
-    SafeArray& operator=(const SafeArray& safeArray); // return SafeArray& that means we don't need to hold this object into another object variable
-    
-    operator int() const {
-        int sum = 0;
-        for (int i = 0; i < this->arrSize; i++) {
-            sum += *(this->arr + i);
-        }
-        return sum;
-    }
+        ~SafeArray();
 
-
+        void printArray() const;
+        T& operator[](uint32_t&& index);
+        SafeArray& operator=(const SafeArray& safeArray);
+        SafeArray& operator=(SafeArray&& safeArray);
 };
 
-// empty constructor
 template <class T>
-SafeArray<T>::SafeArray(): arr{nullptr}, arrSize{0} {
-    std::cout << "constructor called" << std::endl;
+SafeArray<T>::SafeArray(): array{nullptr}, arraySize{-1} {
+    std::cout << "Empty Constructor Called!" << std::endl;
 }
 
-// overloading constructor
 template <class T>
-SafeArray<T>::SafeArray(T* _arr, uint32_t&& _arrSize): arr{nullptr}, arrSize{0} {
-    if (_arr == nullptr) {
-        this->arr = new T[1];
-        this->arrSize = 1;
+SafeArray<T>::SafeArray(T* arr, uint32_t&& arrSize) {
+    if (arr == nullptr) {
+        exit(1);
     } else {
-        if (_arrSize < MAX_SIZE) {
-            this->arr = new T[_arrSize];
-            memcpy(this->arr, _arr, sizeof(*(_arr + 0)) * _arrSize);
-
-            this->arrSize = _arrSize;
+        if (arrSize <= SafeArray<T>::ARRAY_MAX_SIZE) {
+            this->array = new T[arrSize];
+            memcpy(this->array, arr, sizeof(*(this->array + 0)) * arrSize);
+            
+            this->arraySize = arrSize;
         } else {
-            std::cout << "Array size exceeds the maximum size allowed" << std::endl;
+            exit(1);
         }
     }
 }
 
-// copy constructor
 template <class T>
-SafeArray<T>::SafeArray(const SafeArray& safeArray): SafeArray{safeArray.arr, uint32_t(safeArray.arrSize)} {
-    std::cout << "copy constructor called" << std::endl;
+SafeArray<T>::SafeArray(const SafeArray& safeArray): SafeArray{safeArray.array, safeArray.arraySize} {
+    std::cout << "Copy Constructor Called!" << std::endl;
 }
 
-// move constructor
 template <class T>
-SafeArray<T>::SafeArray(SafeArray&& safeArray): arr{safeArray.arr}, arrSize{safeArray.arrSize} {
-    safeArray.arr = nullptr;
-    std::cout << "move constructor called" << std::endl;
+SafeArray<T>::SafeArray(SafeArray&& safeArray): array{safeArray.array}, arraySize{safeArray.arraySize} {
+    safeArray.array = nullptr;
+    std::cout << "Move Constructor Called!" << std::endl;
 }
 
-// destructor
 template <class T>
 SafeArray<T>::~SafeArray() {
-    std::cout << "destructor called" << std::endl;
-    delete [] this->arr;
+    std::cout << "Destructor Called!" << std::endl;
+    delete [] this->array;
 }
 
 template <class T>
 void SafeArray<T>::printArray() const {
-    for (int i = 0; i < this->arrSize; i++) {
-        std::cout << *(this->arr + i) << " ";
+    for (int i = 0; i < this->arraySize; i++) {
+        std::cout << *(this->array + i) << " ";
     }
     std::cout << "\n";
 }
 
 template <class T>
-T& SafeArray<T>::operator[](const uint32_t index) {
-    if (!(index < 0) || !(index >= MAX_SIZE))
-        return this->arr[index];
+T& SafeArray<T>::operator[](uint32_t&& index) {
+    if (!(index < 0) || !(index >= SafeArray<T>::ARRAY_MAX_SIZE))
+        return this->array[index];
 }
 
 template <class T>
 SafeArray<T>& SafeArray<T>::operator=(const SafeArray& safeArray) {
-    std::cout << "assignment operator overloading called!" << std::endl;
-    if (this == &safeArray) {
+    if(this == &safeArray) {
         return *this;
     } else {
-        delete [] this->arr;
-        this->arr = new T[safeArray.arrSize];
-        memcpy(this->arr, safeArray.arr, sizeof(*(safeArray.arr + 0)) * safeArray.arrSize);
-        this->arrSize = safeArray.arrSize;
-
-        return *this;
+        delete [] this->array;
+        this->array = new T[safeArray.arraySize];
+        memcpy(this->array, safeArray.array, sizeof(*(this->array + 0)) * safeArray.arraySize);
     }
 }
 
+template <class T>
+SafeArray<T>& SafeArray<T>::operator=(SafeArray&& safeArray) {
+	if(this == &safeArray) {
+		return *this;
+	} else {
+		delete [] this->array;
+		this->array = safeArray.array;
+		safeArray.array = nullptr;
+
+		this->arraySize = safeArray.arraySize;
+	}
+}
+
 int main(int argc, char* argv[]) {
+	SafeArray<int> sa1(new int[3]{1, 2, 3}, 3);
+	sa1.printArray();
 
-    // empty constructor
-    SafeArray<int> sa1(new int[3]{1, 2, 3}, 3);
-    SafeArray<int> sa2 = sa1;
-
-    int sum1 = sa1;
-    std::cout << sum1 << std::endl;
-
-    int sum2 = sa2;
-    std::cout << sum2 << std::endl;
-
-    return 0;
+    	return 0;
 }
