@@ -52,6 +52,7 @@ public:
     void insert(int value) {
         // Handle first node
         if (root == nullptr) {
+            printf("\nroot created: %d\n", value);
             root = new Node(value);
             return;
         }
@@ -160,11 +161,11 @@ int main() {
     // Insert some values
     tree.insert(50);
     tree.insert(30);
-    tree.insert(70);
-    tree.insert(20);
+    tree.insert(10);
     tree.insert(40);
     tree.insert(60);
-    tree.insert(80);
+    tree.insert(55);
+    tree.insert(70);
 
     std::cout << "Tree structure (threads shown in parentheses):\n";
     tree.printTree();
