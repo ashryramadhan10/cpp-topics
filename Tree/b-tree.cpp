@@ -1,259 +1,252 @@
-#include <vector>
 #include <iostream>
-#include <stdexcept>
+#include <vector>
 #include <algorithm>
-#include <cassert>
+#include <stdexcept>
 
-template <typename T, size_t t = 3>
-class BTree;  // Forward declaration
-
-template <typename T, size_t t = 3>
-class BTreeNode {
-private:
-    bool leaf;
-    std::vector<T> keys;
-    std::vector<BTreeNode<T, t>*> children;
-
-    friend class BTree<T, t>;  // Only specific BTree instantiation is friend
-
-    // Private constructor to ensure nodes are only created through BTree
-    explicit BTreeNode(bool isLeaf = true) : leaf(isLeaf) {
-        // Reserve space for maximum possible keys and children
-        keys.reserve(2 * t - 1);
-        if (!isLeaf) {
-            children.reserve(2 * t);
-        }
-    }
-
-    // Private destructor ensures cleanup only through BTree
-    ~BTreeNode() {
-        for (auto* child : children) {
-            delete child;
-        }
-    }
-
-    // Prevent copying of nodes
-    BTreeNode(const BTreeNode&) = delete;
-    BTreeNode& operator=(const BTreeNode&) = delete;
-
-    // Helper functions for node operations
-    void insertKey(const T& key, size_t pos) {
-        keys.insert(keys.begin() + pos, key);
-    }
-
-    void insertChild(BTreeNode* child, size_t pos) {
-        children.insert(children.begin() + pos, child);
-    }
-
-    void removeKeysAfter(size_t pos) {
-        keys.resize(pos);
-    }
-
-    void removeChildrenAfter(size_t pos) {
-        children.resize(pos);
-    }
-
-public:
-    // Public methods for querying node state
-    bool isFull() const { 
-        return keys.size() >= 2 * t - 1; 
-    }
-
-    bool hasMinKeys() const { 
-        return keys.size() >= t - 1; 
-    }
-
-    size_t getKeyCount() const { 
-        return keys.size(); 
-    }
-    
-    T getKey(size_t index) const { 
-        assert(index < keys.size());
-        return keys[index]; 
-    }
-    
-    bool isLeaf() const { 
-        return leaf; 
-    }
-
-    // Debug method to verify node properties
-    bool verifyProperties() const {
-        // Verify key count constraints
-        if (keys.size() > 2 * t - 1) return false;
-        
-        // Verify keys are in ascending order
-        for (size_t i = 1; i < keys.size(); i++) {
-            if (keys[i] <= keys[i-1]) return false;
-        }
-        
-        // Verify children count
-        if (!leaf && children.size() != keys.size() + 1) return false;
-        
-        return true;
-    }
-};
-
-template <typename T, size_t t = 3>
+template <typename Key, int ORDER = 4>
 class BTree {
 private:
-    BTreeNode<T, t>* root;
+    struct Node {
+        std::vector<Key> keys;
+        std::vector<Node*> children;
+        bool is_leaf;
+        
+        Node() : is_leaf(true) {
+            keys.reserve(ORDER - 1);
+            children.reserve(ORDER);
+        }
+    };
 
-    // Helper method to find insertion position in a node
-    static size_t findPosition(const BTreeNode<T, t>* node, const T& key) {
-        return std::lower_bound(node->keys.begin(), node->keys.end(), key) - node->keys.begin();
+    Node* root;
+
+    // Split a child node during insertion
+    void split_child(Node* parent, int index) {
+        int midpoint = (ORDER - 1) / 2;
+        Node* child = parent->children[index];
+        Node* new_child = new Node();
+
+        // Move upper half keys to new node
+        new_child->keys.assign(
+            child->keys.begin() + midpoint + 1, 
+            child->keys.end()
+        );
+        child->keys.resize(midpoint);
+
+        // Handle children for non-leaf nodes
+        if (!child->is_leaf) {
+            new_child->is_leaf = false;
+            new_child->children.assign(
+                child->children.begin() + midpoint + 1, 
+                child->children.end()
+            );
+            child->children.resize(midpoint + 1);
+        }
+
+        // Insert median key into parent
+        parent->keys.insert(
+            parent->keys.begin() + index, 
+            child->keys[midpoint]
+        );
+        parent->children.insert(
+            parent->children.begin() + index + 1, 
+            new_child
+        );
     }
 
-    void splitChild(BTreeNode<T, t>* parent, size_t childIndex) {
-        BTreeNode<T, t>* child = parent->children[childIndex];
-        BTreeNode<T, t>* newNode = new BTreeNode<T, t>(child->leaf);
-        
-        // Move the right half of keys to the new node
-        for (size_t j = 0; j < t - 1; j++) {
-            newNode->keys.push_back(child->keys[j + t]);
-        }
-        
-        // Move the right half of children if not leaf
-        if (!child->leaf) {
-            for (size_t j = 0; j < t; j++) {
-                newNode->children.push_back(child->children[j + t]);
-            }
-            child->removeChildrenAfter(t);
-        }
-        
-        // Move median key to parent
-        T medianKey = child->keys[t - 1];
-        child->removeKeysAfter(t - 1);
-        
-        // Insert new node into parent
-        parent->insertChild(newNode, childIndex + 1);
-        parent->insertKey(medianKey, childIndex);
-        
-        assert(parent->verifyProperties());
-        assert(child->verifyProperties());
-        assert(newNode->verifyProperties());
-    }
+    // Insert into a non-full node
+    void insert_non_full(Node* node, const Key& key) {
+        int i = node->keys.size() - 1;
 
-    void insertNonFull(BTreeNode<T, t>* node, const T& key) {
-        size_t i = node->getKeyCount() - 1;
-        
-        if (node->isLeaf()) {
-            // Find position and insert key
-            while (i != size_t(-1) && key < node->getKey(i)) {
-                i--;
-            }
-            node->insertKey(key, i + 1);
+        if (node->is_leaf) {
+            // Simple insertion into leaf
+            node->keys.push_back(key);
+            std::sort(node->keys.begin(), node->keys.end());
         } else {
-            // Find appropriate child
-            while (i != size_t(-1) && key < node->getKey(i)) {
+            // Find the child to descend into
+            while (i >= 0 && key < node->keys[i]) {
                 i--;
             }
             i++;
-            
-            // Split child if full
-            if (node->children[i]->isFull()) {
-                splitChild(node, i);
-                if (key > node->getKey(i)) {
+
+            // If child is full, split it
+            if (node->children[i]->keys.size() == ORDER - 1) {
+                split_child(node, i);
+                
+                // Adjust descent path if necessary
+                if (key > node->keys[i]) {
                     i++;
                 }
             }
-            insertNonFull(node->children[i], key);
+
+            insert_non_full(node->children[i], key);
         }
     }
 
-    void printNode(const BTreeNode<T, t>* node, int level, std::ostream& out) const {
+    // Recursive search
+    bool search_key(Node* node, const Key& key) const {
+        if (!node) return false;
+
+        // Find the first key >= target
+        auto it = std::lower_bound(node->keys.begin(), node->keys.end(), key);
+        
+        // If found in current node
+        if (it != node->keys.end() && *it == key) 
+            return true;
+
+        // If leaf and not found, return false
+        if (node->is_leaf) 
+            return false;
+
+        // Recurse into appropriate child
+        int index = std::distance(node->keys.begin(), it);
+        return search_key(node->children[index], key);
+    }
+
+    // Recursive print
+    void print_tree(Node* node, int depth = 0) const {
         if (!node) return;
-        
-        out << "Level " << level << ": ";
-        for (size_t i = 0; i < node->getKeyCount(); ++i) {
-            out << node->getKey(i) << " ";
+
+        for (size_t i = 0; i < node->keys.size(); ++i) {
+            // First recurse into left child if not leaf
+            if (!node->is_leaf && i < node->children.size()) {
+                print_tree(node->children[i], depth + 1);
+            }
+            
+            // Print current key with indentation
+            std::cout << std::string(depth * 2, ' ') 
+                      << node->keys[i] << " ";
         }
-        out << '\n';
-        
-        if (!node->isLeaf()) {
-            for (auto* child : node->children) {
-                printNode(child, level + 1, out);
+
+        // Recurse into last child if not leaf
+        if (!node->is_leaf && !node->children.empty()) {
+            print_tree(node->children.back(), depth + 1);
+        }
+    }
+
+    // Find index of key in a node
+    int find_key_index(Node* node, const Key& key) const {
+        auto it = std::find(node->keys.begin(), node->keys.end(), key);
+        return it != node->keys.end() ? std::distance(node->keys.begin(), it) : -1;
+    }
+
+    // Recursive delete
+    bool delete_key(Node* node, const Key& key) {
+        int index = find_key_index(node, key);
+
+        if (index != -1) {
+            if (node->is_leaf) {
+                // Simple removal from leaf
+                node->keys.erase(node->keys.begin() + index);
+                return true;
+            }
+
+            // Key is in internal node - replace with predecessor
+            Node* predecessor_child = node->children[index];
+            if (!predecessor_child->is_leaf) {
+                while (!predecessor_child->is_leaf) {
+                    predecessor_child = predecessor_child->children.back();
+                }
+            }
+            
+            if (!predecessor_child->keys.empty()) {
+                Key predecessor = predecessor_child->keys.back();
+                node->keys[index] = predecessor;
+                return delete_key(node->children[index], predecessor);
             }
         }
-    }
 
-    const BTreeNode<T, t>* searchNode(const BTreeNode<T, t>* node, const T& key) const {
-        size_t i = 0;
-        while (i < node->getKeyCount() && key > node->getKey(i)) {
-            i++;
+        // If key not found in this node, descend
+        if (node->is_leaf) return false;
+
+        // Find appropriate child to descend
+        int child_index = 0;
+        while (child_index < node->keys.size() && key > node->keys[child_index]) {
+            child_index++;
         }
-        
-        if (i < node->getKeyCount() && key == node->getKey(i)) {
-            return node;
-        }
-        
-        if (node->isLeaf()) {
-            return nullptr;
-        }
-        
-        return searchNode(node->children[i], key);
+
+        return delete_key(node->children[child_index], key);
     }
 
 public:
-    BTree() : root(new BTreeNode<T, t>()) {
-        static_assert(t >= 2, "B-Tree minimum degree must be at least 2");
-    }
-    
-    ~BTree() {
-        delete root;
-    }
-    
-    // Prevent copying
-    BTree(const BTree&) = delete;
-    BTree& operator=(const BTree&) = delete;
-    
-    void insert(const T& key) {
-        if (!root) {
-            throw std::runtime_error("Tree is not initialized");
+    // Constructor
+    BTree() : root(new Node()) {}
+
+    // Insert a key
+    void insert(const Key& key) {
+        Node* r = root;
+
+        // If root is full, create new root and split
+        if (r->keys.size() == ORDER - 1) {
+            Node* new_root = new Node();
+            new_root->is_leaf = false;
+            new_root->children.push_back(root);
+            root = new_root;
+            split_child(new_root, 0);
         }
-        
-        BTreeNode<T, t>* r = root;
-        
-        if (r->isFull()) {
-            BTreeNode<T, t>* newRoot = new BTreeNode<T, t>(false);
-            newRoot->children.push_back(r);
-            root = newRoot;
-            splitChild(newRoot, 0);
-            insertNonFull(newRoot, key);
-        } else {
-            insertNonFull(r, key);
-        }
-    }
-    
-    bool search(const T& key) const {
-        return searchNode(root, key) != nullptr;
-    }
-    
-    void print(std::ostream& out = std::cout) const {
-        out << "B-Tree Structure (t=" << t << "):\n";
-        printNode(root, 0, out);
+
+        insert_non_full(root, key);
     }
 
-    // Verify the entire tree maintains B-tree properties
-    bool verifyTree() const {
-        if (!root) return false;
+    // Update a key
+    void update(const Key& old_key, const Key& new_key) {
+        if (!search(old_key)) {
+            throw std::runtime_error("Key to update not found");
+        }
         
-        // Helper function to verify a subtree
-        std::function<bool(const BTreeNode<T,t>*, bool)> verifySubtree = 
-            [&](const BTreeNode<T,t>* node, bool isRoot) -> bool {
-            if (!node->verifyProperties()) return false;
-            
-            // Root can have fewer keys, other nodes must have at least t-1 keys
-            if (!isRoot && !node->hasMinKeys()) return false;
-            
-            // Recursively verify children
-            if (!node->isLeaf()) {
-                for (auto* child : node->children) {
-                    if (!verifySubtree(child, false)) return false;
-                }
-            }
-            return true;
-        };
-        
-        return verifySubtree(root, true);
+        // Remove old key and insert new key
+        remove(old_key);
+        insert(new_key);
+    }
+
+    // Remove a key
+    void remove(const Key& key) {
+        if (!delete_key(root, key)) {
+            throw std::runtime_error("Key not found");
+        }
+
+        // If root is empty and has only one child, replace it
+        if (root->keys.empty() && !root->is_leaf) {
+            Node* old_root = root;
+            root = root->children[0];
+            delete old_root;
+        }
+    }
+
+    // Search for a key
+    bool search(const Key& key) const {
+        return search_key(root, key);
+    }
+
+    // Print the tree
+    void print() const {
+        std::cout << "B-Tree Contents:\n";
+        print_tree(root);
+        std::cout << std::endl;
     }
 };
+
+int main() {
+    BTree<int> btree;
+
+    // Insert values
+    btree.insert(10);
+    btree.insert(20);
+    btree.insert(5);
+    btree.insert(15);
+    btree.insert(30);
+
+    std::cout << "Initial B-Tree:\n";
+    btree.print();
+
+    // Update a value
+    std::cout << "After updating 20 to 25:\n";
+    btree.update(20, 25);
+    btree.print();
+
+    // Remove a value
+    std::cout << "After removing 5:\n";
+    btree.remove(5);
+    btree.print();
+
+    return 0;
+}
