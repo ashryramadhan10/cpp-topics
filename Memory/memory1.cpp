@@ -1,5 +1,6 @@
 #include <iostream>
 
+// only works for struct
 struct S {
     char a; // memory location #1
     int b : 5; // memory location #2
