@@ -13,7 +13,7 @@ public:
     Person();
     Person(int id, const char* name);
     Person(const Person& person);
-    Person(Person&& person);
+    Person(Person&& person) noexcept;
 
     // destructor
     ~Person();
@@ -39,11 +39,10 @@ Person::Person(const Person& person): Person(person.id, person.name) {
     printf("Copy: Person(%d, %s) created!\n", this->id, this->name);
 }
 
-Person::Person(Person&& person) {
+Person::Person(Person&& person) noexcept {
     this->id = person.id;
 
-    this->name = new char[strlen(name)+1];
-    memcpy(this->name, name, sizeof(*name)*strlen(name)+1);
+    this->name = person.name;
     person.name = nullptr;
 
     printf("Move: Person(%d, %s) created!\n", this->id, this->name);
@@ -103,15 +102,17 @@ int main(int argc, char* argv[]) {
 
     char* p2_name = createString("Person 2");
     Person p2 {2, p2_name};
+    
+    Person p3 = std::move(Person{3, "Person 3"});
 
     // copy assignment operator
     p2 = p1;
 
     // move assignment operator
-    p2 = Person{1, "Person 2 Updated"};
+    p2 = Person{2, "Person 2 Updated"};
 
-    delete p1_name;
-    delete p2_name;
+    delete [] p1_name;
+    delete [] p2_name;
     
     return 0;
 }
