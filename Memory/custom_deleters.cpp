@@ -8,6 +8,8 @@ object managed by the smart pointers
 ptr is deleted. This is useful in scenarios where the
 object requires special cleanup procedures, such as when dealing with non-standard resources
 like file handles or database connections
+
+reference: simplyfycpp.org
 */
 
 int main(int argc, char* argv[]) {

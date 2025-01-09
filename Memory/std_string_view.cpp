@@ -5,7 +5,6 @@ void printSubstring(std::string_view sv) {
     std::cout << sv << std::endl;
 }
 
-
 int main(int argc, char* argv[]) {
     
     std::string str = "Hello, world!";

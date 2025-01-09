@@ -11,6 +11,8 @@ alternative for handling values that may or may not be present.
 
 std::optional is a wrapper template provided by the C++17 standard library, designed to
 represent an object that may or may not hold a value.
+
+reference: simplyfycpp.org
 */
 
 std::optional<int> findValue(bool condition) {
