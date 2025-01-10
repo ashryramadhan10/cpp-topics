@@ -13,6 +13,8 @@ type is active at any given time. It acts as a type-safe union, offering type sa
 the contained type. Unlike traditional unions, which rely on raw memory access and can lead to
 type errors, std::variant ensures that you can only access the current active type, thus
 avoiding undefined behavior.
+
+reference: simplyfycpp.org
 */
 
 using my_variant = std::variant<int,double,std::string>;
