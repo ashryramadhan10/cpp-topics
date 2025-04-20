@@ -6,13 +6,17 @@ class B; // Forward declaration
 class A {
 public:
     std::shared_ptr<B> b_ptr;
-    ~A() { std::cout << "A destroyed" << std::endl; }
+    ~A() { 
+        std::cout << "A destroyed" << std::endl; 
+    }
 };
 
 class B {
 public:
     std::weak_ptr<A> a_ptr;
-    ~B() { std::cout << "B destroyed" << std::endl; }
+    ~B() { 
+        std::cout << "B destroyed" << std::endl; 
+    }
 };
 
 int main() {
