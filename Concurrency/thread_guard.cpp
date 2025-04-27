@@ -6,7 +6,7 @@ private:
     std::thread& t;
 
 public:
-    explicit ThreadGuard(std::thread& t_): t{t_} {}
+    explicit ThreadGuard(std::thread&& t_): t{t_} {}
 
     ~ThreadGuard() {
         if (this->t.joinable()) {
@@ -41,7 +41,7 @@ void f() {
     int some_local_state=0;
     func my_func(some_local_state);
     std::thread t(my_func);
-    ThreadGuard g(std::ref(t));
+    ThreadGuard g(std::move(t));
 
     do_something_in_current_thread(true);
 }
