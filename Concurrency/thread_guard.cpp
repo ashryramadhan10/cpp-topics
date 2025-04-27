@@ -51,6 +51,13 @@ int main(int argc, char* argv[]) {
     // the thread is safe because when the ThreadGuard class guard destroyed
     // the thread will be joined as well, remember that our thread was passed
     // by reference not value
+
+    /*
+    If you don’t need to wait for a thread to finish, you can avoid this exception-safety
+    issue by detaching it. This breaks the association of the thread with the std::thread object
+    and ensures that std::terminate() won’t be called when the std::thread object is
+    destroyed, even though the thread is still running in the background.
+    */
     f();
     return 0;
 }
