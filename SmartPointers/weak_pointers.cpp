@@ -44,10 +44,6 @@ int main(int argc, char* argv[]) {
     // a has b_ptr -> B
     // b has a_ptr -> A
 
-    // first the use_count must be: 2 for each class
-    // then, if a and b get deleted, use_count will be: 1
-    // then we never get access to these pointer to delete them
-
     a->set_B(b);
     b->set_A(a);
 

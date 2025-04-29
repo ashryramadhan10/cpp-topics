@@ -23,12 +23,13 @@ int main() {
     std::shared_ptr<A> a = std::make_shared<A>();
     std::shared_ptr<B> b = std::make_shared<B>();
 
+    std::cout << "a counting: " << a.use_count() << std::endl;
+    std::cout << "b counting: " << b.use_count() << std::endl;
+
     // Heap Memory (FIFO), Stack Memory (LIFO)
     a->b_ptr = b;
     b->a_ptr = a;
 
-    // Now there is a circular reference
-    // A will be deleted first
-    // Then, After A is B
-
+    std::cout << "a counting: " << a.use_count() << std::endl;
+    std::cout << "b counting: " << b.use_count() << std::endl;
 }
