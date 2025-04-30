@@ -12,7 +12,7 @@ void print(const std::string&& str) {
 
             // better call lock_guard
             // only this line your program will be much better
-            std::lock_guard<std::mutex> lck_guard(task_mutex);
+            std::lock_guard lck_guard(task_mutex);
 
             // cout is actually a global variable, << symbol is used for inserting character to cout
             // this will make the output of the stream in terminal will be scrambled
@@ -23,6 +23,8 @@ void print(const std::string&& str) {
             // this will make the program blocked
             // unlock never called
             // mutex remains locked
+            // when throw an exception, lock_guard will unlock the mutex from critical section
+            // this will make other thread can access the data
             throw std::exception();
 
             // task_mutex.unlock();
