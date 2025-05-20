@@ -78,12 +78,14 @@ public:
 
         // data size only 1
         if (tail == head) {
+            std::cout << head->value << std::endl;
             delete head;
             head = nullptr;
             tail = nullptr;
         }
 
         if (tail != nullptr && size > 1) {
+            std::cout << tail->value << std::endl;
             Node* to_be_deleted = tail;
             tail = to_be_deleted->prev;
             tail->next = nullptr;
@@ -93,7 +95,7 @@ public:
         size -= 1;
     }
 
-    void deleteAt(int&& pos) {
+    void deleteAt(int pos) {
         if (pos == 0) {
             deleteFront();
         } else if (pos == size - 1) {
@@ -118,28 +120,79 @@ public:
         size -= 1;
     }
 
-    void displayAllData() const {
-        Node* current = head;
-        while (current != nullptr) {
-            std::cout << current->value << " ";
-            current = current->next;
+    void displayAllData(bool reverse = false) const {
+        if (reverse) {
+            Node* current = tail;
+            while (current != nullptr) {
+                std::cout << current->value << " ";
+                current = current->prev;
+            }
+            std::cout << std::endl;
+        } else {
+            Node* current = head;
+            while (current != nullptr) {
+                std::cout << current->value << " ";
+                current = current->next;
+            }
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
+    }
+};
+
+class Stack {
+private:
+    int top;
+    int size;
+    LinkedList* list;
+
+public:
+    Stack(int size_): top{0}, size{size_} {
+        list = new LinkedList();
+    }
+
+    ~Stack() {
+        delete list;
+        list = nullptr;
+    }
+
+    void push(int&& value) {
+        if (top < size) {
+            list->insert(std::move(value));
+            top++;
+        } else {
+            std::cout << "Insert out of bound" << std::endl;
+        }
+    }
+
+    void pop() {
+        if (top > 0) {
+            list->deleteEnd();
+            top--;
+        }
+    }
+
+    void displayAllData() const {
+        list->displayAllData(true);
     }
 };
 
 int main(int argc, char* argv[]) {
 
-    LinkedList ll;
-    ll.insert(5);
-    ll.insert(6);
-    ll.insert(7);
+    Stack stack{10};
 
-    ll.displayAllData();
+    stack.push(1);
+    stack.push(2);
+    stack.push(3);
 
-    ll.deleteFront();
+    stack.displayAllData();
 
-    ll.displayAllData();
+    stack.pop();
+
+    stack.displayAllData();
+
+    stack.pop();
+    
+    stack.displayAllData();
 
     return 0;
 }
