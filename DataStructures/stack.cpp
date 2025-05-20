@@ -18,7 +18,11 @@ public:
     }
 
     void push(int&& value) {
-        if (top < size - 1) {
+        if (top < size) {
+            // top 0 - insert 1
+            // top 1 - insert 2
+            // top 2 - insert 3
+            // top 3 - can't insert, correct
            vec[top++] = std::move(value);
         } else {
             std::cout << "Data Oversize" << std::endl;
