@@ -2,6 +2,7 @@
 #include "Counter.h"
 #include "SafeArray.h"
 #include "Point.h"
+#define MAX_DIGITS 3
 
 std::ostream& operator << (std::ostream& os, const Counter& counter) {
     // e.g: os << "MyClass(value1 = " << obj.value1 << ", value2 = " << obj.value2 << ")";
@@ -10,7 +11,7 @@ std::ostream& operator << (std::ostream& os, const Counter& counter) {
 }
 
 std::ostream& operator << (std::ostream& os, SafeArray& safeArray) {
-    char result[ARRAYSIZE * 2 + 5];
+    char result[ARRAYSIZE * (MAX_DIGITS + 1) + 1];
     int charCounter = 0;
     int start = 0;
 
@@ -45,7 +46,7 @@ int main(int argc, char* argv[]) {
 
     SafeArray sa;
     for (int i = 0; i < ARRAYSIZE; i++) {
-        sa[i] = i + 1;
+        sa[i] = i + 128;
     }
     std::cout << sa << std::endl;
 
