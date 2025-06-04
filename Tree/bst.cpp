@@ -9,7 +9,7 @@ public:
     Node* right;
     Node* parent;
 
-    Node(int&& _value): value{_value}, height{1}, left{nullptr}, right{nullptr} {}
+    Node(int&& _value): value{_value}, height{1}, left{nullptr}, right{nullptr}, parent {nullptr} {}
 };
 
 class AVLTree {
@@ -32,6 +32,8 @@ public:
         deleteAllData(node->right);
 
         Node* to_be_deleted = node;
+        node->left = nullptr;
+        node->right = nullptr;
         node = nullptr;
         delete to_be_deleted;
     }
@@ -285,6 +287,7 @@ public:
         // delete the successor
         deleteNode(root, successor);
 
+        // change the successor parent pov first
         // swap it first, then delete
         if (node->parent == nullptr) {
             (*root) = sucessorCopy;
@@ -294,6 +297,7 @@ public:
             node->parent->right = sucessorCopy;
         }
 
+        // change the successor children pov afterwards
         sucessorCopy->parent = node->parent;
         sucessorCopy->left = node->left;
         node->left->parent = sucessorCopy;
