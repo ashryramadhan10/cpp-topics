@@ -77,7 +77,7 @@ public:
         }
 
         // data size only 1
-        if (tail == head) {
+        if (tail == head && (head != nullptr || tail != nullptr)) {
             std::cout << head->value << std::endl;
             delete head;
             head = nullptr;
