@@ -14,7 +14,7 @@ class SafeArray {
         SafeArray();
         SafeArray(T* arr, uint32_t&& arraySize);
         SafeArray(const SafeArray& safeArray);
-        SafeArray(SafeArray&& safeArray);
+        SafeArray(SafeArray&& safeArray) noexcept;
 
         ~SafeArray();
 
@@ -25,7 +25,7 @@ class SafeArray {
 };
 
 template <class T>
-SafeArray<T>::SafeArray(): array{nullptr}, arraySize{-1} {
+SafeArray<T>::SafeArray(): array{nullptr}, arraySize{0} {
     std::cout << "Empty Constructor Called!" << std::endl;
 }
 
@@ -51,7 +51,7 @@ SafeArray<T>::SafeArray(const SafeArray& safeArray): SafeArray{safeArray.array, 
 }
 
 template <class T>
-SafeArray<T>::SafeArray(SafeArray&& safeArray): array{safeArray.array}, arraySize{safeArray.arraySize} {
+SafeArray<T>::SafeArray(SafeArray&& safeArray) noexcept : array{safeArray.array}, arraySize{safeArray.arraySize} {
     safeArray.array = nullptr;
     std::cout << "Move Constructor Called!" << std::endl;
 }
