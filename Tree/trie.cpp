@@ -20,10 +20,12 @@ public:
 class Trie {
 private:
     Node* root;
+    bool deleteFlag;
 
 public:
     Trie() {
         root = new Node();
+        deleteFlag = false;
     }
 
     ~Trie() {
@@ -52,7 +54,12 @@ public:
     }
 
     void search(std::string&& target) {
-        root = searchNode(root, std::move(target), 0);
+        Node* searchedNode = searchNode(root, std::move(target), 0);
+        if (searchedNode != nullptr) {
+            std::cout << "valid entry" << std::endl;
+        } else {
+            std::cout << "invalid entry" << std::endl;
+        }
     }
 
     int letterToIndex(char next_letter) {
@@ -64,7 +71,6 @@ public:
         // and check whether the node is a valid entry not
         if (index == target.length()) {
             if (node->is_entry) {
-                std::cout << "valid entry" << std::endl;
                 return node;
             } else {
                 return nullptr;
@@ -82,6 +88,50 @@ public:
             return searchNode(next_child, std::move(target), index + 1);
         }
     }
+
+    void remove(std::string&& target) {
+        this->deleteFlag = false;
+        deleteNode(this->root, std::move(target), 0, deleteFlag);
+        if (deleteFlag) {
+            std::cout << "deleted successfully" << std::endl;
+        } else {
+            std::cout << "deleted failed" << std::endl;
+        }
+    }
+
+    void deleteNode(Node* node, std::string&& target, int index, bool& delete_flag) {
+        if (index == target.length()) {
+            if (node->is_entry) {
+                node->is_entry = false;
+                return;
+            }
+        }
+
+        char next_letter = target[index];
+        int next_index = letterToIndex(next_letter);
+
+        if (node->children[next_index] != nullptr) {
+            deleteNode(node->children[next_index], std::move(target), index + 1, delete_flag);
+        } else {
+            return;
+        }
+
+        // after delete the is_entry true
+        // it will automatically deletes its children as well
+        if (node->children[next_index] != nullptr && node->children[next_index]->is_entry) {
+            return;
+        }
+
+        for (auto child : node->children[next_index]->children) {
+            if (child != nullptr) {
+                return;
+            }
+        }
+
+        delete node->children[next_index];
+        delete_flag = true;
+        node->children[next_index] = nullptr;
+    }
 };
 
 int main(int argc, char* argv[]) {
@@ -90,5 +140,15 @@ int main(int argc, char* argv[]) {
     trie.insert("Ramadhan");
     trie.insert("Ramadhani");
 
+    trie.search("Ramadhani");
+
+    trie.remove("Ramadhani");
+
+    trie.search("Ramadhan");
+    trie.search("Ramadhani");
+
+    trie.remove("Ramadhan");
+
+    trie.search("Ramadhan");
     return 0;
 }
