@@ -117,7 +117,7 @@ public:
         }
 
         // after delete the is_entry true
-        // it will automatically deletes its children as well
+        // it will automatically delete its children as well
         if (node->children[next_index] != nullptr && node->children[next_index]->is_entry) {
             return;
         }
@@ -150,5 +150,36 @@ int main(int argc, char* argv[]) {
     trie.remove("Ramadhan");
 
     trie.search("Ramadhan");
+
+    // this can be compared if we don't use a Trie structure
+    // If we use Trie, we don't have to check it like this
+    std::vector<std::string> vec;
+    vec.emplace_back("Ena");
+    vec.emplace_back("Enb");
+    vec.emplace_back("Enc");
+
+    const std::string input_string = "End";
+    int flag = 0;
+    for (auto str : vec) {
+        flag = 0;
+
+        for (int i = 0; i < str.length(); i++) {
+            if (input_string[i] != str[i]) {
+                flag += 1;
+                break;
+            }
+        }
+
+        if (flag == 0) {
+            break;
+        }
+    }
+
+    if (flag) {
+        std::cout << "\nInput string is not listed in the Vec" << std::endl;
+    } else {
+        std::cout << "\nInput string found!" << std::endl;
+    }
+
     return 0;
 }
