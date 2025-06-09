@@ -104,11 +104,11 @@ void Heap<T>::updateValue(const int &index, const T &value) {
     if (*old_value < *this->arr[index]) {
         // Bubble up
         int current_index = index;
-        int parent_index = current_index / 2;
+        int parent_index = std::floor(current_index / 2);
         while (parent_index >= 1 && (*(this->arr[parent_index]) < *(this->arr[current_index]))) {
             swapNodes(parent_index, current_index);
             current_index = parent_index;
-            parent_index = current_index / 2;
+            parent_index = std::floor(current_index / 2);
         }
     } else {
         // Bubble down
@@ -140,36 +140,42 @@ void Heap<T>::heapRemoveMax() {
         return;
     }
 
-    std::unique_ptr<T> result = std::move(this->arr[1]);
-    this->taskNameToIndex.erase(result->task_name);
+    // previous max priority
+    std::unique_ptr<T> removed = std::move(this->arr[1]);
+    this->taskNameToIndex.erase(removed->task_name);
 
     this->arr[1] = std::move(this->arr[this->last_index]);
     this->taskNameToIndex[this->arr[1]->task_name] = 1;
 
-    this->arr[this->last_index] = nullptr;
+    // decrease last_index
     this->last_index--;
 
     int i = 1;
     while (i <= this->last_index) {
         int swap = i;
 
+        // search the largest priority between parent with left child
         if (2 * i <= this->last_index && (*(this->arr[swap]) < *(this->arr[2 * i]))) {
             swap = 2 * i;
         }
 
+        // then will be check between left child and right child if swap has changed to 2 * i
         if (2 * i + 1 <= this->last_index && (*(this->arr[swap]) < *(this->arr[2 * i + 1]))) {
             swap = 2 * i + 1;
         }
 
+        // swap it between i and swap
         if (i != swap) {
             swapNodes(i, swap);
+
+            // i now as the swap
             i = swap;
         } else {
             break;
         }
     }
 
-    std::cout << "Deleted: " << result->task_name << " (Priority: " << result->priority << ")\n";
+    std::cout << "Deleted: " << removed->task_name << " (Priority: " << removed->priority << ")\n";
 }
 
 template<class T>
@@ -179,6 +185,7 @@ void Heap<T>::heapRemoveMin() {
         return;
     }
 
+    // search the min index
     int min_index = 1;
     for (int i = 2; i <= this->last_index; ++i) {
         if (*(this->arr[i]) < *(this->arr[min_index])) {
@@ -191,8 +198,6 @@ void Heap<T>::heapRemoveMin() {
 
     this->arr[min_index] = std::move(this->arr[this->last_index]);
     this->taskNameToIndex[this->arr[min_index]->task_name] = min_index;
-
-    this->arr[this->last_index] = nullptr;
     this->last_index--;
 
     int i = min_index;
