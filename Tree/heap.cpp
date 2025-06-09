@@ -41,8 +41,8 @@ public:
     ~Heap();
 
     void heapInsert(const T& value);
-    void heapRemoveMax();
-    void heapRemoveMin();
+    std::unique_ptr<T> heapRemoveMax();
+    std::unique_ptr<T> heapRemoveMin();
     void updateValue(const int& index, const T& value);
 
 private:
@@ -135,9 +135,13 @@ void Heap<T>::updateValue(const int &index, const T &value) {
 }
 
 template<class T>
-void Heap<T>::heapRemoveMax() {
+std::unique_ptr<T> Heap<T>::heapRemoveMax() {
     if (this->last_index == 0) {
-        return;
+        return nullptr;
+    }
+
+    if (this->last_index == 1) {
+        return std::move(this->arr[1]);
     }
 
     // previous max priority
@@ -176,13 +180,18 @@ void Heap<T>::heapRemoveMax() {
     }
 
     std::cout << "Deleted: " << removed->task_name << " (Priority: " << removed->priority << ")\n";
+    return std::move(removed);
 }
 
 template<class T>
-void Heap<T>::heapRemoveMin() {
+std::unique_ptr<T> Heap<T>::heapRemoveMin() {
     if (this->last_index == 0) {
         std::cerr << "Heap is empty.\n";
-        return;
+        return nullptr;
+    }
+
+    if (this->last_index == 1) {
+        return std::move(this->arr[1]);
     }
 
     // search the min index
@@ -221,6 +230,7 @@ void Heap<T>::heapRemoveMin() {
     }
 
     std::cout << "Deleted Min: " << removed->task_name << " (Priority: " << removed->priority << ")\n";
+    return std::move(removed);
 }
 
 int main(int argc, char* argv[]) {
