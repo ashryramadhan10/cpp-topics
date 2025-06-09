@@ -20,12 +20,10 @@ public:
 class Trie {
 private:
     Node* root;
-    bool deleteFlag;
 
 public:
     Trie() {
         root = new Node();
-        deleteFlag = false;
     }
 
     ~Trie() {
@@ -90,20 +88,18 @@ public:
     }
 
     void remove(std::string&& target) {
-        this->deleteFlag = false;
-        deleteNode(this->root, std::move(target), 0, deleteFlag);
-        if (deleteFlag) {
-            std::cout << "deleted successfully" << std::endl;
+        if (deleteNode(this->root, std::move(target), 0)) {
+            std::cout << "string completely deleted" << std::endl;
         } else {
-            std::cout << "deleted failed" << std::endl;
+            std::cout << "string partially deleted" << std::endl;
         }
     }
 
-    void deleteNode(Node* node, std::string&& target, int index, bool& delete_flag) {
+    bool deleteNode(Node* node, std::string&& target, int index) {
         if (index == target.length()) {
             if (node->is_entry) {
                 node->is_entry = false;
-                return;
+                return true;
             }
         }
 
@@ -111,26 +107,27 @@ public:
         int next_index = letterToIndex(next_letter);
 
         if (node->children[next_index] != nullptr) {
-            deleteNode(node->children[next_index], std::move(target), index + 1, delete_flag);
+            if (deleteNode(node->children[next_index], std::move(target), index + 1)) {
+                delete node->children[next_index];
+                node->children[next_index] = nullptr;
+            }
         } else {
-            return;
+            return false;
         }
 
-        // after delete the is_entry true
-        // it will automatically delete its children as well
-        if (node->children[next_index] != nullptr && node->children[next_index]->is_entry) {
-            return;
+        if (node->is_entry) {
+            return false;
         }
 
-        for (auto child : node->children[next_index]->children) {
+        for (auto child : node->children) {
             if (child != nullptr) {
-                return;
+                return false;
             }
         }
 
-        delete node->children[next_index];
-        delete_flag = true;
-        node->children[next_index] = nullptr;
+        // current node will be a child on next stack of recursion
+        // it will be deleted because this one return true;
+        return true;
     }
 };
 
@@ -140,9 +137,9 @@ int main(int argc, char* argv[]) {
     trie.insert("Ramadhan");
     trie.insert("Ramadhani");
 
-    trie.search("Ramadhani");
+    trie.search("Ramadhan");
 
-    trie.remove("Ramadhani");
+    trie.remove("Ramadhan");
 
     trie.search("Ramadhan");
     trie.search("Ramadhani");
