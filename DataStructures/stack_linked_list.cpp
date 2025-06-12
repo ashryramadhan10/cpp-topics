@@ -64,8 +64,8 @@ public:
         if (head != nullptr && size > 1) {
             Node* to_be_deleted = head;
             head = to_be_deleted->next;
-            head->prev = nullptr;
             delete to_be_deleted;
+            head->prev = nullptr;
         }
 
         size -= 1;
@@ -88,8 +88,8 @@ public:
             std::cout << tail->value << std::endl;
             Node* to_be_deleted = tail;
             tail = to_be_deleted->prev;
-            tail->next = nullptr;
             delete to_be_deleted;
+            tail->next = nullptr;
         }
 
         size -= 1;
