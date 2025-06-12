@@ -54,7 +54,7 @@ public:
         }
 
         // data size only 1
-        if (head == tail && (head == nullptr || head->next == nullptr)) {
+        if (head == tail && (head != nullptr || head->next == nullptr)) {
             delete head;
             head = nullptr;
             tail = nullptr;
