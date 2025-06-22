@@ -21,11 +21,7 @@ public:
     ~TaskRecord() = default;
 
     bool operator < (const TaskRecord& _task_record) const {
-        if (this->priority < _task_record.priority) {
-            return true;
-        } else {
-            return false;
-        }
+        return this->priority < _task_record.priority;
     }
 };
 
@@ -113,8 +109,9 @@ void Heap<T>::updateValue(const int &index, const T &value) {
     } else {
         // Bubble down
         int i = index;
+        int swap = i;
+
         while (i <= this->last_index) {
-            int swap = i;
 
             if (2 * i <= this->last_index && (*(this->arr[swap]) < *(this->arr[2 * i]))) {
                 swap = 2 * i;
@@ -155,8 +152,9 @@ std::unique_ptr<T> Heap<T>::heapRemoveMax() {
     this->last_index--;
 
     int i = 1;
+    int swap = i;
+
     while (i <= this->last_index) {
-        int swap = i;
 
         // search the largest priority between parent with left child
         if (2 * i <= this->last_index && (*(this->arr[swap]) < *(this->arr[2 * i]))) {
@@ -210,8 +208,9 @@ std::unique_ptr<T> Heap<T>::heapRemoveMin() {
     this->last_index--;
 
     int i = min_index;
+    int swap = i;
+
     while (i <= this->last_index) {
-        int swap = i;
 
         if (2 * i <= this->last_index && (*(this->arr[swap]) < *(this->arr[2 * i]))) {
             swap = 2 * i;
