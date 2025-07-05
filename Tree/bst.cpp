@@ -279,10 +279,6 @@ public:
 
         // before delete the successor, allocate a new memory with its data
         Node* sucessorCopy = new Node(std::move(successor->value));
-        sucessorCopy->parent = successor->parent;
-        sucessorCopy->left = successor->left; // most probably this is a nullptr
-        sucessorCopy->right = successor->right; // this one also is a nullptr
-        sucessorCopy->height = successor->height; // this one is 1
 
         // delete the successor
         deleteNode(root, successor);
@@ -309,6 +305,8 @@ public:
         if (node->right != nullptr) {
             node->right->parent = sucessorCopy;
         }
+
+        sucessorCopy->height = node->height;
 
         delete node;
     }
@@ -348,7 +346,6 @@ int main(int argc, char* argv[]) {
     printf("\n");
     avltree.deleteValue(81);
     avltree.preOrderTraveral();
-
 
     return 0;
 }
