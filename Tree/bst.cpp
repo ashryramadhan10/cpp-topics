@@ -38,12 +38,26 @@ public:
         delete to_be_deleted;
     }
 
-    Node* rotateRight(Node* y) {
+    Node* rotateRight(Node** root, Node* y) {
         Node* x = y->left;
         Node* t2 = x->right;
 
+        x->parent = y->parent;
+        if (y->parent == nullptr) {
+            (*root) = x;
+        } else if (y->parent->left == y) {
+            y->parent->left = x;
+        } else {
+            y->parent->right = x;
+        }
+
         x->right = y;
+        y->parent = x;
         y->left = t2;
+
+        if (t2 != nullptr) {
+            t2->parent = y;
+        }
 
         updateNodeHeight(y);
         updateNodeHeight(x);
@@ -51,12 +65,26 @@ public:
         return x;
     }
 
-    Node* rotateLeft(Node* y) {
+    Node* rotateLeft(Node** root, Node* y) {
         Node* x = y->right;
         Node* t2 = x->left;
 
+        x->parent = y->parent;
+        if (y->parent == nullptr) {
+            (*root) = x;
+        } else if (y->parent->left == y) {
+            y->parent->left = x;
+        } else {
+            y->parent->right = x;
+        }
+
         x->left = y;
+        y->parent = x;
         y->right = t2;
+
+        if (t2 != nullptr) {
+            t2->parent = y;
+        }
 
         updateNodeHeight(y);
         updateNodeHeight(x);
@@ -86,19 +114,19 @@ public:
     }
 
     void insert(int&& value) {
-        root = insertNode(root, std::move(value));
+        root = insertNode(&root, root, std::move(value));
     }
 
-    Node* insertNode(Node* node, int&& value) {
+    Node* insertNode(Node** root, Node* node, int&& value) {
         if (node == nullptr) {
             return new Node(std::move(value));
         }
 
         if (value < node->value) {
-            node->left = insertNode(node->left, std::move(value));
+            node->left = insertNode(root, node->left, std::move(value));
             node->left->parent = node;
         } else {
-            node->right = insertNode(node->right, std::move(value));
+            node->right = insertNode(root, node->right, std::move(value));
             node->right->parent = node;
         }
 
@@ -107,24 +135,24 @@ public:
 
         // LL rotation
         if (balanceFactor > 1 && value < node->left->value) {
-            return rotateRight(node);
+            return rotateRight(root, node);
         }
 
         // LR rotation
         if (balanceFactor > 1 && value > node->left->value) {
-            node->left = rotateLeft(node->left);
-            return rotateRight(node);
+            node->left = rotateLeft(root, node->left);
+            return rotateRight(root, node);
         }
 
         // RR rotation
         if (balanceFactor < -1 && value > node->right->value) {
-            return rotateLeft(node);
+            return rotateLeft(root, node);
         }
 
         // RL rotation
         if (balanceFactor < -1 && value < node->right->value) {
-            node->right = rotateRight(node->right);
-            return rotateLeft(node);
+            node->right = rotateRight(root, node->right);
+            return rotateLeft(root, node);
         }
 
         // no need for rotation
